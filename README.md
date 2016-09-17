@@ -1,3 +1,3 @@
 # Udacity_TensorFlow
 
-TensorFlow assingments for the Udacity course: https://classroom.udacity.com/courses/ud730
+TensorFlow assingments for the Udacity course: https://www.udacity.com/course/deep-learning--ud730
