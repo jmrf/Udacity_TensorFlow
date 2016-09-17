@@ -1,15 +1,15 @@
-
-%matplotlib inline
 from __future__ import print_function
-import collections
-import math
-import numpy as np
+
 import os
+import math
 import random
-import tensorflow as tf
 import zipfile
-from matplotlib import pylab
+import numpy as np
+import collections
+import tensorflow as tf
+
 from six.moves import range
+from matplotlib import pylab
 from six.moves.urllib.request import urlretrieve
 from sklearn.manifold import TSNE
 
@@ -69,15 +69,15 @@ def generate_batch(batch_size, num_skips, skip_window):
 
         for j in range(num_skips):
             while target in targets_to_avoid:
-            target = random.randint(0, span - 1)
-            targets_to_avoid.append(target)
-            batch[i * num_skips + j] = buffer[skip_window]
-            labels[i * num_skips + j, 0] = buffer[target]
+                target = random.randint(0, span - 1)
+                targets_to_avoid.append(target)
+                batch[i * num_skips + j] = buffer[skip_window]
+                labels[i * num_skips + j, 0] = buffer[target]
 
         buffer.append(data[data_index])
         data_index = (data_index + 1) % len(data)
 
-  return batch, labels
+    return batch, labels
 
 
 def build_dataset(words):
@@ -97,10 +97,10 @@ def build_dataset(words):
             unk_count = unk_count + 1
         data.append(index)
 
-  count[0][1] = unk_count
-  reverse_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
+    count[0][1] = unk_count
+    reverse_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
 
-  return data, count, dictionary, reverse_dictionary
+    return data, count, dictionary, reverse_dictionary
 
 
 def maybe_download(filename, expected_bytes):
@@ -198,33 +198,32 @@ if __name__ == "__main__":
             batch_data, batch_labels = generate_batch(
             batch_size, num_skips, skip_window)
 
-        feed_dict = {train_dataset : batch_data, train_labels : batch_labels}
+            feed_dict = {train_dataset : batch_data, train_labels : batch_labels}
 
-        _, l = session.run([optimizer, loss], feed_dict=feed_dict)
+            _, l = session.run([optimizer, loss], feed_dict=feed_dict)
+            average_loss += l
 
-        average_loss += l
+            if step % 2000 == 0:
+                if step > 0:
+                    average_loss = average_loss / 2000
+                    # The average loss is an estimate of the loss over the last 2000 batches.
+                    print('Average loss at step %d: %f' % (step, average_loss))
+                    average_loss = 0
 
-        if step % 2000 == 0:
-            if step > 0:
-            average_loss = average_loss / 2000
-            # The average loss is an estimate of the loss over the last 2000 batches.
-            print('Average loss at step %d: %f' % (step, average_loss))
-            average_loss = 0
+            # note that this is expensive (~20% slowdown if computed every 500 steps)
+            if step % 10000 == 0:
+                sim = similarity.eval()
+                for i in range(valid_size):
+                    valid_word = reverse_dictionary[valid_examples[i]]
+                    top_k = 8 # number of nearest neighbors
+                    nearest = (-sim[i, :]).argsort()[1:top_k+1]
+                    log = 'Nearest to %s:' % valid_word
+                    for k in range(top_k):
+                        close_word = reverse_dictionary[nearest[k]]
+                        log = '%s %s,' % (log, close_word)
+                    print(log)
 
-        # note that this is expensive (~20% slowdown if computed every 500 steps)
-        if step % 10000 == 0:
-            sim = similarity.eval()
-            for i in range(valid_size):
-            valid_word = reverse_dictionary[valid_examples[i]]
-            top_k = 8 # number of nearest neighbors
-            nearest = (-sim[i, :]).argsort()[1:top_k+1]
-            log = 'Nearest to %s:' % valid_word
-            for k in range(top_k):
-                close_word = reverse_dictionary[nearest[k]]
-                log = '%s %s,' % (log, close_word)
-            print(log)
-
-      final_embeddings = normalized_embeddings.eval()
+        final_embeddings = normalized_embeddings.eval()
 
 
     # Dimensionality redution to visualize embeddings structure
